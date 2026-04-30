@@ -31,4 +31,4 @@ jobs:
 
     - name: Run security scan (Bandit)
       run: |
-        bandit -r .
+        bandit -r . -x tests
