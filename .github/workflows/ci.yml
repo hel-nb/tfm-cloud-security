@@ -37,3 +37,19 @@ jobs:
     - name: Run Gitleaks (secret scanning)
       uses: gitleaks/gitleaks-action@v2
      
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+        aws-region: us-east-1
+
+    - name: Zip Lambda function
+      run: |
+        cd services/users
+        zip -r function.zip .
+
+    - name: Deploy to Lambda
+      run: |
+        aws lambda update-function-code \
+          --function-name poc-users-service \
+          --zip-file fileb://services/users/function.zip
