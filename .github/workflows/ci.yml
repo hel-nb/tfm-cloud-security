@@ -2,7 +2,7 @@ name: CI Pipeline
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "dev" ]
     
 permissions:
   id-token: write
@@ -11,7 +11,10 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-
+  
+    env:                             
+      FUNCTION_NAME: ""
+    
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -40,6 +43,14 @@ jobs:
         
     - name: Run Gitleaks (secret scanning)
       uses: gitleaks/gitleaks-action@v2
+
+    - name: Set environment
+      run: |
+        if [[ "${GITHUB_REF}" == "refs/heads/main" ]]; then
+          echo "FUNCTION_NAME=poc-users-service" >> $GITHUB_ENV
+        else
+          echo "FUNCTION_NAME=poc-users-service-dev" >> $GITHUB_ENV
+        fi
      
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
@@ -55,5 +66,9 @@ jobs:
     - name: Deploy to Lambda
       run: |
         aws lambda update-function-code \
-          --function-name poc-users-service \
+          --function-name  $FUNCTION_NAME \
           --zip-file fileb://services/users/function.zip
+
+        aws lambda update-function-configuration \
+          --function-name $FUNCTION_NAME \
+          --handler app.lambda_handler
