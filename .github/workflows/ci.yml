@@ -65,7 +65,7 @@ jobs:
         cd services/users
         zip -r function.zip .
 
-    - name: Deploy to Lambda
+    - name: Deploy new Lambda
       run: |
         aws lambda update-function-code \
           --function-name  $FUNCTION_NAME \
@@ -76,9 +76,12 @@ jobs:
         aws lambda wait function-updated \
          --function-name $FUNCTION_NAME
       
-        aws lambda update-function-configuration \
-          --function-name $FUNCTION_NAME \
-          --handler app.lambda_handler
+        VERSION=$(aws lambda publish-version \
+         --function-name $FUNCTION_NAME \
+         --query 'Version' \
+         --output text)
+
+        echo "NEW_VERSION=$VERSION" >> $GITHUB_ENV
 
     - name: Install jq
       run: sudo apt-get install -y jq
