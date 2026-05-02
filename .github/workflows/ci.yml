@@ -104,6 +104,12 @@ jobs:
       run: |
          echo "Rolling back..."
 
+         if [[ "${GITHUB_REF}" == "refs/heads/main" ]]; then
+           FUNCTION_NAME="poc-users-service"
+         else
+           FUNCTION_NAME="poc-users-service-dev"
+         fi
+
          git checkout HEAD~1
 
          cd services/users
