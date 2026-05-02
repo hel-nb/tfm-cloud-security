@@ -90,7 +90,7 @@ jobs:
       id: test_lambda
       run: |
        aws lambda invoke \
-       --function-name $FUNCTION_NAME \
+       --function-name $FUNCTION_NAME:dev \
        --cli-binary-format raw-in-base64-out \
        --payload '{"fail": true}' \
        response.json
@@ -103,7 +103,15 @@ jobs:
         echo "Lambda test failed"
         exit 1
        fi
-       
+  
+    - name: Promote version to alias
+      if: success()
+      run: |
+       aws lambda update-alias \
+       --function-name $FUNCTION_NAME \
+       --name dev \
+       --function-version $NEW_VERSION  
+    
     - name: Configure AWS credentials
       if: failure()
       uses: aws-actions/configure-aws-credentials@v4
@@ -111,21 +119,16 @@ jobs:
         role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
         aws-region: us-east-1
 
-    - name: Rollback if failed
+    - name: Rollback if alias
       if: failure()
       run: |
-         echo "Rolling back..."
+         echo "Rollback alias to previous version"
 
-         if [[ "${GITHUB_REF}" == "refs/heads/main" ]]; then
-           FUNCTION_NAME="poc-users-service"
-         else
-           FUNCTION_NAME="poc-users-service-dev"
-         fi
-
-         git checkout HEAD~1
-
-         cd services/users
-         zip -r function.zip .
+         PREVIOUS_VERSION=$(aws lambda get-alias \
+         --function-name $FUNCTION_NAME \
+         --name dev \
+         --query 'FunctionVersion' \
+         --output text)
 
          aws lambda update-function-code \
          --function-name $FUNCTION_NAME \
