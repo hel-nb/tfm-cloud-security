@@ -1,5 +1,5 @@
 def lambda_handler(event, context):
     return {
         "statusCode": 200,
-        "body": "Users service OK"
+        "body": "Users service DEV"
     }
