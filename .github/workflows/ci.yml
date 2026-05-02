@@ -125,16 +125,26 @@ jobs:
         role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
         aws-region: us-east-1
 
-    - name: Rollback if alias
+    - name: Rollback alias
       if: failure()
       run: |
          echo "Rollback alias to previous version"
+
+         if [[ "$GITHUB_REF" == "refs/heads/main" ]]; then
+          ALIAS="prod"
+         else
+          ALIAS="dev"
+         fi
+
+         echo "Using alias: $ALIAS"
 
          PREVIOUS_VERSION=$(aws lambda get-alias \
          --function-name $FUNCTION_NAME \
          --name $ALIAS \
          --query 'FunctionVersion' \
          --output text)
+
+          echo "Previous version: $PREVIOUS_VERSION"
 
          aws lambda update-function-code \
          --function-name $FUNCTION_NAME \
