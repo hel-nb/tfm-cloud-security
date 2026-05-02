@@ -69,6 +69,11 @@ jobs:
           --function-name  $FUNCTION_NAME \
           --zip-file fileb://services/users/function.zip
 
+        echo "Waiting for Lambda update to finish..."
+
+        aws lambda wait function-updated \
+         --function-name $FUNCTION_NAME
+      
         aws lambda update-function-configuration \
           --function-name $FUNCTION_NAME \
           --handler app.lambda_handler
