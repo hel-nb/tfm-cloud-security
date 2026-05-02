@@ -89,6 +89,12 @@ jobs:
     - name: Test Lambda
       id: test_lambda
       run: |
+       if [[ "${GITHUB_REF}" == "refs/heads/main" ]]; then
+         ALIAS="prod"
+       else
+         ALIAS="dev"
+       fi
+       
        aws lambda invoke \
        --function-name $FUNCTION_NAME:dev \
        --cli-binary-format raw-in-base64-out \
@@ -126,7 +132,7 @@ jobs:
 
          PREVIOUS_VERSION=$(aws lambda get-alias \
          --function-name $FUNCTION_NAME \
-         --name dev \
+         --name $ALIAS \
          --query 'FunctionVersion' \
          --output text)
 
