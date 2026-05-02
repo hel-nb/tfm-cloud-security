@@ -100,6 +100,7 @@ jobs:
        fi
        
     - name: Configure AWS credentials
+      if: failure()
       uses: aws-actions/configure-aws-credentials@v4
       with:
         role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
@@ -123,5 +124,6 @@ jobs:
 
          aws lambda update-function-code \
          --function-name $FUNCTION_NAME \
+         --region us-east-1 \
          --zip-file fileb://function.zip
          
