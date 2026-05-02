@@ -96,7 +96,7 @@ jobs:
        fi
        
        aws lambda invoke \
-       --function-name $FUNCTION_NAME:dev \
+       --function-name $FUNCTION_NAME:$ALIAS \
        --cli-binary-format raw-in-base64-out \
        --payload '{"fail": true}' \
        response.json
@@ -113,11 +113,17 @@ jobs:
     - name: Promote version to alias
       if: success()
       run: |
-       aws lambda update-alias \
-       --function-name $FUNCTION_NAME \
-       --name dev \
-       --function-version $NEW_VERSION  
-    
+         if [[ "${GITHUB_REF}" == "refs/heads/main" ]]; then
+           ALIAS="prod"
+         else
+           ALIAS="dev"
+         fi
+
+         aws lambda update-alias \
+          --function-name $FUNCTION_NAME \
+          --name "$ALIAS" \
+          --function-version "$NEW_VERSION"
+            
     - name: Configure AWS credentials
       if: failure()
       uses: aws-actions/configure-aws-credentials@v4
@@ -144,11 +150,11 @@ jobs:
          --query 'FunctionVersion' \
          --output text)
 
-          echo "Previous version: $PREVIOUS_VERSION"
+         echo "Previous version: $PREVIOUS_VERSION"
 
-         aws lambda update-function-code \
+         aws lambda update-alias \
          --function-name $FUNCTION_NAME \
-          --name "$ALIAS" \
-          --function-version $PREVIOUS_VERSION
-         --region us-east-1 \
+         --name "$ALIAS" \
+         --function-version $PREVIOUS_VERSION
+         
                 
