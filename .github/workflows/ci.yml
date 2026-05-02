@@ -126,4 +126,8 @@ jobs:
          --function-name $FUNCTION_NAME \
          --region us-east-1 \
          --zip-file fileb://function.zip
+
+         aws lambda wait function-updated \
+         --function-name $FUNCTION_NAME \
+         --region us-east-1
          
