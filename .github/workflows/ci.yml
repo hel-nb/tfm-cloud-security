@@ -117,4 +117,4 @@ jobs:
 
          aws lambda update-function-code \
          --function-name $FUNCTION_NAME \
-         --zip-file fileb://services/users/function.zip
+         --zip-file fileb://function.zip
