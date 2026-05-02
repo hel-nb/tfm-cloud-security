@@ -77,3 +77,36 @@ jobs:
         aws lambda update-function-configuration \
           --function-name $FUNCTION_NAME \
           --handler app.lambda_handler
+
+    - name: Install jq
+      run: sudo apt-get install -y jq
+      
+    - name: Test Lambda
+      id: test_lambda
+      run: |
+       aws lambda invoke \
+       --function-name $FUNCTION_NAME \
+       response.json
+
+       cat response.json
+
+       STATUS_CODE=$(cat response.json | jq -r '.statusCode')
+
+       if [ "$STATUS_CODE" != "200" ]; then
+        echo "Lambda test failed"
+        exit 1
+       fi
+
+    - name: Rollback if failed
+      if: failure()
+      run: |
+         echo "Rolling back..."
+
+         git checkout HEAD~1
+
+         cd services/users
+         zip -r function.zip .
+
+         aws lambda update-function-code \
+         --function-name $FUNCTION_NAME \
+         --zip-file fileb://services/users/function.zip
